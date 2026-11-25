@@ -1,4 +1,5 @@
 import "server-only";
+import type { SignOutScope } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Credentials } from "../domain/credentials";
 import type { EmailConfirmation } from "../domain/confirmation";
@@ -7,6 +8,9 @@ import type { AuthUser } from "../domain/types";
 type AuthFailure = { ok: false; code: string };
 
 const UNKNOWN_ERROR_CODE = "unknown";
+
+/** Ends only this browser's session; Supabase's default ("global") would revoke every session of the account. */
+const SIGN_OUT_SCOPE: SignOutScope = "local";
 
 function failure(error: { code?: string }): AuthFailure {
   return { ok: false, code: error.code ?? UNKNOWN_ERROR_CODE };
@@ -41,7 +45,7 @@ export async function signUpWithPassword(
 
 export async function signOutCurrentUser(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: SIGN_OUT_SCOPE });
 }
 
 export async function verifyEmailToken(

@@ -165,13 +165,14 @@ describe("signUp", () => {
 });
 
 describe("signOut", () => {
-  it("signs out the current user and redirects to /login", async () => {
+  it("ends only the current session and redirects to /login", async () => {
     useAuth(createFakeAuth({ user: { id: "user-1", email: "ana@example.com" } }));
 
     const target = await redirectTarget(signOut());
 
     expect(target).toBe("/login");
-    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    // The literal is the contract under test: "global" (Supabase's default) would end every session of the account.
+    expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "local" });
   });
 
   it("still ends at /login when nobody is signed in", async () => {

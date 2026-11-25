@@ -18,7 +18,7 @@ that are not listed here; if you see a real problem not covered, report it under
 
 1. Read the task, its acceptance criteria, and the changed files you were given.
 2. Run the automated checks (G1–G4). Paste the relevant error lines as evidence.
-3. Inspect the code for the remaining guidelines (G5–G15).
+3. Inspect the code for the remaining guidelines (G5–G15, G17).
 4. Check each acceptance criterion of the task.
 5. Return the report in the exact format below.
 
@@ -38,7 +38,7 @@ that are not listed here; if you see a real problem not covered, report it under
 | ID | Guideline | How to verify |
 |---|---|---|
 | G5 | Every new `domain/` function, Zod schema, and Server Action has unit tests covering happy path, invalid input, and (for actions) the unauthenticated case | Read the specs next to the changed code |
-| G6 | Tests check behavior (inputs → outputs / effects), not implementation details; no empty or always-true tests | Read the specs |
+| G6 | Tests check behavior (inputs → outputs / effects), not implementation details; no empty, always-true, or weak tests. A test is weak (and a **failure**, not a note) when it cannot fail for a real bug: e.g. it only compares a constant to a literal, asserts a mock returns what it was told to return, or checks only that a function was called without checking the result or effect | Read the specs |
 | G7 | User-visible flows added by the task have a Playwright spec; E2E tests pass when run | `npm run test:e2e` (if it cannot run in this environment, say so in NOTES and do not fail G7 for that reason alone) |
 
 ### Security
@@ -57,6 +57,7 @@ that are not listed here; if you see a real problem not covered, report it under
 |---|---|---|
 | G13 | Structure follows `develop.md`: routes in `src/app` stay thin, Supabase queries only in `features/*/data`, `domain/` has no framework or I/O imports | Read imports of changed files |
 | G14 | No `console.log`, commented-out code, or dead code in changed files | Search the changed files |
+| G17 | No hardcoded value that duplicates an existing exported constant (route paths, limits, status values, messages, etc.): code must import the constant. This is a **failure**, not a note | Search the changed files for literals that match an exported constant (e.g. `rg '"/profile"'` vs `PROFILE_PATH`) |
 | G15 | UI is accessible and complete: inputs have labels, forms show validation errors, lists have empty states, async actions show loading/error states | Read the changed components |
 
 ### Task

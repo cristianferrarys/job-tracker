@@ -1,8 +1,11 @@
 import type { NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/proxy";
+import { getAuthRedirect } from "@/features/auth/domain/route-access";
+import { redirectWithSession, updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
-  return updateSession(request);
+  const { response, isAuthenticated } = await updateSession(request);
+  const target = getAuthRedirect(request.nextUrl.pathname, isAuthenticated);
+  return target ? redirectWithSession(request, response, target) : response;
 }
 
 export const config = {

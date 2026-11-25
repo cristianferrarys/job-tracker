@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { applicationIdSchema } from "@/features/applications/domain/application";
 import { formatIsoDate } from "@/features/applications/domain/dates";
 import { applicationPath, NEW_APPLICATION_PATH } from "@/features/applications/domain/routes";
@@ -11,19 +11,19 @@ import {
   createApplication,
   deleteApplicationsByCompanyPrefix,
   deleteOpenApplication,
+  E2E_COMPANY_PREFIXES,
   openBoard,
   waitForInteractiveApplicationForm,
 } from "../support/applications";
 import { hasE2eCredentials, MISSING_CREDENTIALS_REASON } from "../support/credentials";
+import { withSignedInPage } from "../support/signed-in-page";
 import { SUPABASE_ROUND_TRIP_TIMEOUT } from "../support/timeouts";
 
 test.skip(!hasE2eCredentials, MISSING_CREDENTIALS_REASON);
 
-/** Every application these specs create starts with this prefix; only those are ever deleted. */
-const E2E_COMPANY_PREFIX = "e2e-company-";
 const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 const application = {
-  company: `${E2E_COMPANY_PREFIX}${runId}`,
+  company: `${E2E_COMPANY_PREFIXES.applications}${runId}`,
   role: "E2E Frontend Developer",
   jobUrl: `https://example.com/jobs/${runId}`,
   jobDescription: "React, TypeScript and accessibility.",
@@ -31,23 +31,15 @@ const application = {
 };
 const editedRole = `E2E Staff Engineer ${runId}`;
 
-async function withSignedInPage(browser: Browser, testInfo: TestInfo, run: (page: Page) => Promise<void>) {
-  const { baseURL, storageState } = testInfo.project.use;
-  const context = await browser.newContext({ baseURL, storageState });
-  try {
-    await run(await context.newPage());
-  } finally {
-    await context.close();
-  }
-}
-
 test.describe("application lifecycle", () => {
   test.describe.configure({ mode: "serial" });
 
   let detailUrl = "";
 
   test.afterAll(async ({ browser }, testInfo) => {
-    await withSignedInPage(browser, testInfo, (page) => deleteApplicationsByCompanyPrefix(page, E2E_COMPANY_PREFIX));
+    await withSignedInPage(browser, testInfo, (page) =>
+      deleteApplicationsByCompanyPrefix(page, E2E_COMPANY_PREFIXES.applications),
+    );
   });
 
   test("creates an application and lands on its detail page", async ({ page }) => {

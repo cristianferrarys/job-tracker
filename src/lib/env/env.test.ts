@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { getPublicEnv } from "./public";
-import { getServerEnv } from "./server";
+import { getGeminiEnv, getServerEnv } from "./server";
 
 vi.mock("server-only", () => ({}));
 
@@ -40,10 +40,43 @@ describe("getServerEnv", () => {
     });
   });
 
+  it("reads the optional GEMINI_MODEL override", () => {
+    stubPublicEnv();
+    vi.stubEnv("GEMINI_API_KEY", "gemini-key");
+    vi.stubEnv("GEMINI_MODEL", "gemini-custom");
+
+    expect(getServerEnv().GEMINI_MODEL).toBe("gemini-custom");
+  });
+
   it("throws a clear error when GEMINI_API_KEY is missing", () => {
     stubPublicEnv();
     vi.stubEnv("GEMINI_API_KEY", undefined);
 
     expect(() => getServerEnv()).toThrow(/GEMINI_API_KEY/);
+  });
+});
+
+describe("getGeminiEnv", () => {
+  it("returns the Gemini key and model override from the server env", () => {
+    stubPublicEnv();
+    vi.stubEnv("GEMINI_API_KEY", "gemini-key");
+    vi.stubEnv("GEMINI_MODEL", "gemini-custom");
+
+    expect(getGeminiEnv()).toEqual({ apiKey: "gemini-key", model: "gemini-custom" });
+  });
+
+  it("leaves the model unset when there is no override", () => {
+    stubPublicEnv();
+    vi.stubEnv("GEMINI_API_KEY", "gemini-key");
+    vi.stubEnv("GEMINI_MODEL", "");
+
+    expect(getGeminiEnv()).toEqual({ apiKey: "gemini-key", model: undefined });
+  });
+
+  it("throws when GEMINI_API_KEY is missing", () => {
+    stubPublicEnv();
+    vi.stubEnv("GEMINI_API_KEY", undefined);
+
+    expect(() => getGeminiEnv()).toThrow(/GEMINI_API_KEY/);
   });
 });

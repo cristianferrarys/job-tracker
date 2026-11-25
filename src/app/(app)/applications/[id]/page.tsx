@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AnalysisPanel } from "@/features/analysis/components/analysis-panel";
 import { ApplicationDetailSection } from "@/features/applications/components/application-detail-section";
 import { HOME_PATH } from "@/features/auth/domain/route-access";
 
@@ -17,7 +18,7 @@ export default function ApplicationPage({ params }: PageProps<"/applications/[id
       </Link>
       <Suspense fallback={<p role="status">Loading the application…</p>}>
         {params.then(({ id }) => (
-          <ApplicationDetailSection id={id} />
+          <ApplicationDetailSection id={id} extra={<AnalysisPanel applicationId={id} />} />
         ))}
       </Suspense>
     </main>

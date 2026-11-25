@@ -59,6 +59,14 @@ describe("parseServerEnv", () => {
     );
   });
 
+  it("keeps a GEMINI_MODEL override, trimmed", () => {
+    expect(parseServerEnv({ ...validServer, GEMINI_MODEL: " gemini-custom " }).GEMINI_MODEL).toBe("gemini-custom");
+  });
+
+  it.each([undefined, "", "   "])("treats GEMINI_MODEL %j as unset", (value) => {
+    expect(parseServerEnv({ ...validServer, GEMINI_MODEL: value }).GEMINI_MODEL).toBeUndefined();
+  });
+
   it("throws when a public variable is invalid", () => {
     expect(() =>
       parseServerEnv({ ...validServer, NEXT_PUBLIC_SUPABASE_URL: undefined }),

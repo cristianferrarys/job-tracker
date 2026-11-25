@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { hasE2eCredentials, MISSING_CREDENTIALS_REASON } from "../support/credentials";
 import {
   addSkill,
@@ -11,6 +11,7 @@ import {
   summaryField,
   type ProfileSnapshot,
 } from "../support/profile-form";
+import { withSignedInPage } from "../support/signed-in-page";
 
 test.skip(!hasE2eCredentials, MISSING_CREDENTIALS_REASON);
 
@@ -19,20 +20,6 @@ const E2E_SKILL_PREFIX = "e2e-tag-";
 const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 const skill = `${E2E_SKILL_PREFIX}${runId}`;
 const summary = `E2E summary ${runId}`;
-
-async function withSignedInPage<T>(
-  browser: Browser,
-  testInfo: TestInfo,
-  run: (page: Page) => Promise<T>,
-): Promise<T> {
-  const { baseURL, storageState } = testInfo.project.use;
-  const context = await browser.newContext({ baseURL, storageState });
-  try {
-    return await run(await context.newPage());
-  } finally {
-    await context.close();
-  }
-}
 
 test.describe("profile editing", () => {
   test.describe.configure({ mode: "serial" });

@@ -7,6 +7,12 @@ export const publicEnvSchema = z.object({
 
 export const serverEnvSchema = publicEnvSchema.extend({
   GEMINI_API_KEY: z.string().min(1),
+  /** Optional override of the default Gemini model; an empty value counts as unset. */
+  GEMINI_MODEL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

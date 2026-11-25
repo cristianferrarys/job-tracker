@@ -5,6 +5,16 @@ import { STATUS_LABELS, type ApplicationStatus } from "@/features/applications/d
 import { HOME_PATH } from "@/features/auth/domain/route-access";
 import { SUPABASE_ROUND_TRIP_TIMEOUT } from "./timeouts";
 
+/**
+ * Company prefix of the applications each spec creates. Cleanup only deletes by one of these, so
+ * keep them disjoint: no prefix may start with another, or one spec's cleanup would delete
+ * applications that a spec running in parallel is still using.
+ */
+export const E2E_COMPANY_PREFIXES = {
+  applications: "e2e-company-crud-",
+  analysis: "e2e-company-analysis-",
+} as const;
+
 export type NewApplication = {
   company: string;
   role: string;
@@ -81,7 +91,19 @@ export async function deleteOpenApplication(page: Page): Promise<void> {
   await expect(page).toHaveURL(HOME_PATH, { timeout: SUPABASE_ROUND_TRIP_TIMEOUT });
 }
 
-/** Deletes every application whose company starts with `prefix` (leftovers of failed runs). */
+/** Deletes the application at `href` unless it is already gone, so cleanup never fails on it. */
+async function deleteApplicationIfPresent(page: Page, href: string): Promise<void> {
+  await page.goto(href);
+  const deleteButton = page.getByRole("button", { name: "Delete application" });
+  const notFound = page.getByRole("heading", { level: 1, name: "Application not found" });
+  await expect(deleteButton.or(notFound)).toBeVisible({ timeout: SUPABASE_ROUND_TRIP_TIMEOUT });
+  if (await notFound.isVisible()) {
+    return;
+  }
+  await deleteOpenApplication(page);
+}
+
+/** Deletes every application whose company starts with `prefix`, including leftovers of failed runs. */
 export async function deleteApplicationsByCompanyPrefix(page: Page, prefix: string): Promise<void> {
   await openBoard(page);
   const hrefs = await page
@@ -93,7 +115,6 @@ export async function deleteApplicationsByCompanyPrefix(page: Page, prefix: stri
       prefix,
     );
   for (const href of new Set(hrefs)) {
-    await page.goto(href);
-    await deleteOpenApplication(page);
+    await deleteApplicationIfPresent(page, href);
   }
 }

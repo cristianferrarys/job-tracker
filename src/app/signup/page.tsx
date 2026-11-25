@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AuthLink } from "@/features/auth/components/auth-link";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { SignupForm } from "@/features/auth/components/signup-form";
+import { LOGIN_PATH } from "@/features/auth/domain/route-access";
 
 export const metadata: Metadata = { title: "Sign up · Job Tracker" };
 
@@ -12,7 +13,7 @@ export default function SignupPage() {
       description="Sign up with your email and a password."
       footer={
         <>
-          Already have an account? <AuthLink href="/login">Log in</AuthLink>
+          Already have an account? <AuthLink href={LOGIN_PATH}>Log in</AuthLink>
         </>
       }
     >

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { emailConfirmationSchema } from "./confirmation";
+import { CONFIRMABLE_OTP_TYPES, emailConfirmationSchema } from "./confirmation";
 
 describe("emailConfirmationSchema", () => {
-  it.each(["signup", "email", "email_change"])("accepts a token hash with type %s", (type) => {
+  it.each([...CONFIRMABLE_OTP_TYPES])("accepts a token hash with type %s", (type) => {
     const result = emailConfirmationSchema.safeParse({ tokenHash: "abc123", type });
 
     expect(result).toEqual({ success: true, data: { tokenHash: "abc123", type } });

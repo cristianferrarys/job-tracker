@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/server";
 import { createFakeAuth, RedirectSignal, throwRedirect, type FakeAuth } from "@/test/auth-mocks";
 import { signIn, signOut, signUp } from "./actions";
+import { INVALID_CREDENTIALS_MESSAGE } from "./domain/auth-errors";
+import { PASSWORD_MIN_LENGTH } from "./domain/credentials";
+import { HOME_PATH, LOGIN_PATH } from "./domain/route-access";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -43,12 +46,12 @@ describe("signIn", () => {
       signIn(null, form({ email: " Ana@Example.com ", password: "secret-pass" })),
     );
 
-    expect(target).toBe("/");
+    expect(target).toBe(HOME_PATH);
     expect(auth.signInWithPassword).toHaveBeenCalledWith({
       email: "ana@example.com",
       password: "secret-pass",
     });
-    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(revalidatePath).toHaveBeenCalledWith(HOME_PATH, "layout");
   });
 
   it("returns field errors and does not call Supabase for invalid input", async () => {
@@ -81,7 +84,7 @@ describe("signIn", () => {
 
     const result = await signIn(null, form({ email: "ana@example.com", password: "wrong-pass" }));
 
-    expect(result).toEqual({ ok: false, error: "Invalid email or password.", email: "ana@example.com" });
+    expect(result).toEqual({ ok: false, error: INVALID_CREDENTIALS_MESSAGE, email: "ana@example.com" });
   });
 
   it("redirects an already signed-in user to / without signing in again", async () => {
@@ -91,7 +94,7 @@ describe("signIn", () => {
       signIn(null, form({ email: "ana@example.com", password: "secret-pass" })),
     );
 
-    expect(target).toBe("/");
+    expect(target).toBe(HOME_PATH);
     expect(auth.signInWithPassword).not.toHaveBeenCalled();
   });
 });
@@ -102,7 +105,7 @@ describe("signUp", () => {
       signUp(null, form({ email: "New@Example.com", password: "12345678" })),
     );
 
-    expect(target).toBe("/");
+    expect(target).toBe(HOME_PATH);
     expect(auth.signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "12345678" });
   });
 
@@ -123,7 +126,7 @@ describe("signUp", () => {
     expect(result).toEqual({
       ok: false,
       error: "Please fix the highlighted fields.",
-      fieldErrors: { password: ["Password must be at least 8 characters."] },
+      fieldErrors: { password: [`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`] },
       email: "new@example.com",
     });
     expect(auth.signUp).not.toHaveBeenCalled();
@@ -159,7 +162,7 @@ describe("signUp", () => {
       signUp(null, form({ email: "new@example.com", password: "12345678" })),
     );
 
-    expect(target).toBe("/");
+    expect(target).toBe(HOME_PATH);
     expect(auth.signUp).not.toHaveBeenCalled();
   });
 });
@@ -170,7 +173,7 @@ describe("signOut", () => {
 
     const target = await redirectTarget(signOut());
 
-    expect(target).toBe("/login");
+    expect(target).toBe(LOGIN_PATH);
     // The literal is the contract under test: "global" (Supabase's default) would end every session of the account.
     expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "local" });
   });
@@ -178,7 +181,7 @@ describe("signOut", () => {
   it("still ends at /login when nobody is signed in", async () => {
     const target = await redirectTarget(signOut());
 
-    expect(target).toBe("/login");
+    expect(target).toBe(LOGIN_PATH);
     expect(auth.signOut).not.toHaveBeenCalled();
   });
 });

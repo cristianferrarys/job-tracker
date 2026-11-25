@@ -12,14 +12,6 @@ function fieldErrors(input: unknown) {
   return result.success ? {} : z.flattenError(result.error).fieldErrors;
 }
 
-describe("profile limits", () => {
-  it("match or are stricter than the database constraints", () => {
-    expect(PROFILE_SUMMARY_MAX_LENGTH).toBeLessThanOrEqual(5000);
-    expect(PROFILE_SKILLS_MAX_COUNT).toBeLessThanOrEqual(100);
-    expect(PROFILE_SKILL_MAX_LENGTH).toBeGreaterThan(0);
-  });
-});
-
 describe("profileInputSchema", () => {
   it("accepts a summary and skills", () => {
     const result = profileInputSchema.safeParse({

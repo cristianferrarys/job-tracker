@@ -1,8 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LOGIN_PATH, SIGNUP_PATH } from "../domain/route-access";
+
+type AuthPagePath = typeof LOGIN_PATH | typeof SIGNUP_PATH;
 
 /** Inline link between the auth pages with a visible focus ring. */
-export function AuthLink({ href, children }: { href: "/login" | "/signup"; children: ReactNode }) {
+export function AuthLink({ href, children }: { href: AuthPagePath; children: ReactNode }) {
   return (
     <Link
       href={href}

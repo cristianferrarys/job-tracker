@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { loginNoticeMessage, signInErrorMessage, signUpErrorMessage } from "./auth-errors";
+import {
+  CONFIRMATION_FAILED_CODE,
+  INVALID_CREDENTIALS_MESSAGE,
+  loginNoticeMessage,
+  signInErrorMessage,
+  signUpErrorMessage,
+} from "./auth-errors";
 
 describe("signInErrorMessage", () => {
   it("uses the same generic message for wrong passwords and unknown users", () => {
-    expect(signInErrorMessage("invalid_credentials")).toBe("Invalid email or password.");
-    expect(signInErrorMessage("user_not_found")).toBe("Invalid email or password.");
-    expect(signInErrorMessage("unexpected_failure")).toBe("Invalid email or password.");
+    expect(signInErrorMessage("invalid_credentials")).toBe(INVALID_CREDENTIALS_MESSAGE);
+    expect(signInErrorMessage("user_not_found")).toBe(INVALID_CREDENTIALS_MESSAGE);
+    expect(signInErrorMessage("unexpected_failure")).toBe(INVALID_CREDENTIALS_MESSAGE);
   });
 
   it("asks the user to wait when rate limited", () => {
@@ -44,7 +50,7 @@ describe("loginNoticeMessage", () => {
   });
 
   it("explains a failed email confirmation", () => {
-    expect(loginNoticeMessage("confirmation_failed")).toMatch(/invalid or has expired/i);
+    expect(loginNoticeMessage(CONFIRMATION_FAILED_CODE)).toMatch(/invalid or has expired/i);
   });
 
   it("never echoes an unknown code back to the page", () => {

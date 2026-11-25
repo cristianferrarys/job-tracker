@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { requireUser } from "@/features/auth/session";
+import { LOGIN_PATH } from "@/features/auth/domain/route-access";
 import { throwRedirect } from "@/test/auth-mocks";
 import { findProfileByUserId } from "./data/profile-repository";
 import { getCurrentProfile } from "./queries";
@@ -19,9 +20,9 @@ describe("getCurrentProfile", () => {
   });
 
   it("redirects to /login and reads nothing when there is no user", async () => {
-    vi.mocked(requireUser).mockImplementation(async () => throwRedirect("/login"));
+    vi.mocked(requireUser).mockImplementation(async () => throwRedirect(LOGIN_PATH));
 
-    await expect(getCurrentProfile()).rejects.toMatchObject({ url: "/login" });
+    await expect(getCurrentProfile()).rejects.toMatchObject({ url: LOGIN_PATH });
     expect(findProfileByUserId).not.toHaveBeenCalled();
   });
 });

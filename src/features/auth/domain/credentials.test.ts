@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { signInSchema, signUpSchema } from "./credentials";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, signInSchema, signUpSchema } from "./credentials";
 
 function fieldErrors(result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) {
   return (result.error?.issues ?? []).map((issue) => [issue.path.join("."), issue.message]);
@@ -50,22 +50,35 @@ describe("signInSchema", () => {
 });
 
 describe("signUpSchema", () => {
-  it("accepts a valid email and a password of at least 8 characters", () => {
-    const result = signUpSchema.safeParse({ email: " New@Example.com", password: "12345678" });
+  it("accepts a valid email and a password at the minimum length", () => {
+    const password = "a".repeat(PASSWORD_MIN_LENGTH);
+    const result = signUpSchema.safeParse({ email: " New@Example.com", password });
 
-    expect(result).toEqual({ success: true, data: { email: "new@example.com", password: "12345678" } });
+    expect(result).toEqual({ success: true, data: { email: "new@example.com", password } });
   });
 
-  it("rejects a password shorter than 8 characters", () => {
-    const result = signUpSchema.safeParse({ email: "new@example.com", password: "1234567" });
+  it("accepts a password at the maximum length", () => {
+    const password = "a".repeat(PASSWORD_MAX_LENGTH);
 
-    expect(fieldErrors(result)).toEqual([["password", "Password must be at least 8 characters."]]);
+    expect(signUpSchema.safeParse({ email: "new@example.com", password }).success).toBe(true);
   });
 
-  it("rejects a password longer than 72 characters", () => {
-    const result = signUpSchema.safeParse({ email: "new@example.com", password: "a".repeat(73) });
+  it("rejects a password shorter than the minimum length", () => {
+    const password = "a".repeat(PASSWORD_MIN_LENGTH - 1);
+    const result = signUpSchema.safeParse({ email: "new@example.com", password });
 
-    expect(fieldErrors(result)).toEqual([["password", "Password must be at most 72 characters."]]);
+    expect(fieldErrors(result)).toEqual([
+      ["password", `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`],
+    ]);
+  });
+
+  it("rejects a password longer than the maximum length", () => {
+    const password = "a".repeat(PASSWORD_MAX_LENGTH + 1);
+    const result = signUpSchema.safeParse({ email: "new@example.com", password });
+
+    expect(fieldErrors(result)).toEqual([
+      ["password", `Password must be at most ${PASSWORD_MAX_LENGTH} characters.`],
+    ]);
   });
 
   it("rejects an invalid email", () => {

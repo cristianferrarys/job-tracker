@@ -1,9 +1,12 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requireUser } from "@/features/auth/session";
+import { LOGIN_PATH } from "@/features/auth/domain/route-access";
 import { throwRedirect } from "@/test/auth-mocks";
 import { saveProfile } from "./actions";
 import { upsertProfile } from "./data/profile-repository";
+import { PROFILE_SKILL_MAX_LENGTH, PROFILE_SUMMARY_MAX_LENGTH } from "./domain/profile";
+import { PROFILE_PATH } from "./domain/routes";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -40,7 +43,7 @@ describe("saveProfile", () => {
       ok: true,
       data: { summary: "Frontend dev", skills: ["TypeScript", "React"], updatedAt: UPDATED_AT },
     });
-    expect(revalidatePath).toHaveBeenCalledWith("/profile");
+    expect(revalidatePath).toHaveBeenCalledWith(PROFILE_PATH);
   });
 
   it("adds skills still typed in the tag input", async () => {
@@ -56,14 +59,14 @@ describe("saveProfile", () => {
   });
 
   it("returns field errors and does not touch the database for invalid input", async () => {
-    const result = await saveProfile(null, form("a".repeat(5001), ["x".repeat(51)]));
+    const result = await saveProfile(null, form("a".repeat(PROFILE_SUMMARY_MAX_LENGTH + 1), ["x".repeat(PROFILE_SKILL_MAX_LENGTH + 1)]));
 
     expect(result).toEqual({
       ok: false,
       error: "Please fix the highlighted fields.",
       fieldErrors: {
-        summary: ["Summary must be at most 5000 characters."],
-        skills: ["Each skill must be at most 50 characters."],
+        summary: [`Summary must be at most ${PROFILE_SUMMARY_MAX_LENGTH} characters.`],
+        skills: [`Each skill must be at most ${PROFILE_SKILL_MAX_LENGTH} characters.`],
       },
     });
     expect(upsertProfile).not.toHaveBeenCalled();
@@ -78,9 +81,9 @@ describe("saveProfile", () => {
   });
 
   it("redirects to /login and does not touch the database when unauthenticated", async () => {
-    vi.mocked(requireUser).mockImplementation(async () => throwRedirect("/login"));
+    vi.mocked(requireUser).mockImplementation(async () => throwRedirect(LOGIN_PATH));
 
-    await expect(saveProfile(null, form("Dev", ["Go"]))).rejects.toMatchObject({ url: "/login" });
+    await expect(saveProfile(null, form("Dev", ["Go"]))).rejects.toMatchObject({ url: LOGIN_PATH });
     expect(upsertProfile).not.toHaveBeenCalled();
   });
 

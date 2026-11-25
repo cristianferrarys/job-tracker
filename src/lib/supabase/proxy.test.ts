@@ -1,6 +1,7 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { HOME_PATH, LOGIN_PATH } from "@/features/auth/domain/route-access";
 import { redirectWithSession, updateSession } from "./proxy";
 
 vi.mock("@supabase/ssr", () => ({ createServerClient: vi.fn() }));
@@ -112,10 +113,10 @@ describe("redirectWithSession", () => {
     const request = new NextRequest("http://localhost:3000/private");
     const { response } = await updateSession(request);
 
-    const redirect = redirectWithSession(request, response, "/login");
+    const redirect = redirectWithSession(request, response, LOGIN_PATH);
 
     expect(redirect.status).toBe(307);
-    expect(redirect.headers.get("location")).toBe("http://localhost:3000/login");
+    expect(redirect.headers.get("location")).toBe(`http://localhost:3000${LOGIN_PATH}`);
   });
 
   it("keeps refreshed cookies and no-cache headers on the redirect", async () => {
@@ -123,7 +124,7 @@ describe("redirectWithSession", () => {
     const request = requestWithCookie({ name: "sb-token", value: "old" });
     const { response } = await updateSession(request);
 
-    const redirect = redirectWithSession(request, response, "/");
+    const redirect = redirectWithSession(request, response, HOME_PATH);
 
     expect(redirect.cookies.get("sb-token")).toMatchObject({
       value: "refreshed",

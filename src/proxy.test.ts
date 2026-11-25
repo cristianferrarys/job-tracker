@@ -1,6 +1,7 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { HOME_PATH, LOGIN_PATH, SIGNUP_PATH } from "./features/auth/domain/route-access";
 import { proxy } from "./proxy";
 
 vi.mock("@supabase/ssr", () => ({ createServerClient: vi.fn() }));
@@ -24,8 +25,10 @@ function mockSession(options: { userId?: string; refresh?: boolean }) {
   });
 }
 
+const ORIGIN = "http://localhost:3000";
+
 function request(path: string) {
-  return new NextRequest(`http://localhost:3000${path}`);
+  return new NextRequest(`${ORIGIN}${path}`);
 }
 
 describe("proxy route protection", () => {
@@ -34,7 +37,7 @@ describe("proxy route protection", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "public-anon-key");
   });
 
-  it.each(["/", "/applications", "/profile/edit"])(
+  it.each([HOME_PATH, "/applications", "/profile/edit"])(
     "redirects an unauthenticated request for %s to /login",
     async (path) => {
       mockSession({});
@@ -42,11 +45,11 @@ describe("proxy route protection", () => {
       const response = await proxy(request(path));
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe("http://localhost:3000/login");
+      expect(response.headers.get("location")).toBe(`${ORIGIN}${LOGIN_PATH}`);
     },
   );
 
-  it.each(["/login", "/signup", "/auth/confirm?token_hash=abc&type=signup"])(
+  it.each([LOGIN_PATH, SIGNUP_PATH, "/auth/confirm?token_hash=abc&type=signup"])(
     "lets an unauthenticated request for %s through",
     async (path) => {
       mockSession({});
@@ -58,13 +61,13 @@ describe("proxy route protection", () => {
     },
   );
 
-  it.each(["/login", "/signup"])("redirects an authenticated user on %s to /", async (path) => {
+  it.each([LOGIN_PATH, SIGNUP_PATH])("redirects an authenticated user on %s to /", async (path) => {
     mockSession({ userId: "user-1" });
 
     const response = await proxy(request(path));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/");
+    expect(response.headers.get("location")).toBe(`${ORIGIN}${HOME_PATH}`);
   });
 
   it("lets an authenticated user reach protected pages", async () => {
@@ -78,9 +81,9 @@ describe("proxy route protection", () => {
   it("preserves refreshed session cookies on a redirect", async () => {
     mockSession({ userId: "user-1", refresh: true });
 
-    const response = await proxy(request("/login"));
+    const response = await proxy(request(LOGIN_PATH));
 
-    expect(response.headers.get("location")).toBe("http://localhost:3000/");
+    expect(response.headers.get("location")).toBe(`${ORIGIN}${HOME_PATH}`);
     expect(response.cookies.get("sb-token")?.value).toBe("refreshed");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });

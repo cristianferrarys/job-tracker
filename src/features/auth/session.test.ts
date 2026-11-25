@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/server";
 import { createFakeAuth, throwRedirect, type FakeAuth } from "@/test/auth-mocks";
+import { LOGIN_PATH } from "./domain/route-access";
 import { requireUser } from "./session";
 
 vi.mock("server-only", () => ({}));
@@ -23,6 +24,6 @@ describe("requireUser", () => {
   });
 
   it("redirects to /login when there is no user", async () => {
-    await expect(requireUser()).rejects.toMatchObject({ url: "/login" });
+    await expect(requireUser()).rejects.toMatchObject({ url: LOGIN_PATH });
   });
 });

@@ -1,10 +1,14 @@
 import { loadEnvConfig } from "@next/env";
 import { defineConfig, devices } from "@playwright/test";
+import { AUTH_STATE_PATH } from "./tests/e2e/support/auth-state";
 
 loadEnvConfig(process.cwd());
 
 const port = Number(process.env.PORT ?? 3000);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`;
+// Set PLAYWRIGHT_CHROMIUM_CHANNEL=chrome to use a locally installed Google Chrome.
+const chromium = { ...devices["Desktop Chrome"], channel: process.env.PLAYWRIGHT_CHROMIUM_CHANNEL };
+const SIGNED_IN_SPECS = /signed-in\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -17,10 +21,15 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
+    // Never use the stored session; specs that need a user log in on their own (e.g. sign-out).
+    { name: "chromium", use: chromium, testIgnore: SIGNED_IN_SPECS },
+    // Logs in once through /login and stores the session in AUTH_STATE_PATH (git-ignored).
+    { name: "setup", testMatch: /auth\.setup\.ts/, use: chromium },
     {
-      name: "chromium",
-      // Set PLAYWRIGHT_CHROMIUM_CHANNEL=chrome to use a locally installed Google Chrome.
-      use: { ...devices["Desktop Chrome"], channel: process.env.PLAYWRIGHT_CHROMIUM_CHANNEL },
+      name: "chromium-signed-in",
+      testMatch: SIGNED_IN_SPECS,
+      dependencies: ["setup"],
+      use: { ...chromium, storageState: AUTH_STATE_PATH },
     },
   ],
   webServer: {

@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { HOME_PATH } from "@/features/auth/domain/route-access";
+import { PROFILE_PATH } from "@/features/profile/domain/routes";
 import { NavLink } from "./nav-link";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home" },
-  { href: "/profile", label: "Profile" },
+  { href: HOME_PATH, label: "Home" },
+  { href: PROFILE_PATH, label: "Profile" },
 ];
 
 /** Top bar for signed-in pages: app name, main navigation and an `actions` slot (e.g. sign out). */

@@ -45,6 +45,12 @@ duplicate exported constants).
 
 ## Notes
 
+- **Origin of the G6/G17 fixes (criterion 6):** both violations were first reported by Testing
+  as non-failing NOTES in task 004, round 1 (`profile.test.ts:16-20` only compared constants to
+  literals; `app-header.tsx` hardcoded `"/profile"` instead of `PROFILE_PATH`). At that time G6
+  did not define weak tests as failures and G17 did not exist, so task 004 passed. The human then
+  tightened the guidelines (004-0), and Develop fixed both issues in this task before its first
+  review. No 004-1 round failed on G6 or G17; the rounds below are recorded as they happened.
 - The account's original summary was overwritten during round 3, before the restore existed; the
   human must reset it manually once.
 - The removed weak test was the only link between `PROFILE_*` limits and the DB constraints; a

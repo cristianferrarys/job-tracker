@@ -1,9 +1,7 @@
 import "server-only";
+import type { RepositoryResult } from "@/lib/repository-result";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, ProfileInput } from "../domain/profile";
-
-/** Repository outcome. Failures carry no database details so they never reach the UI. */
-export type RepositoryResult<Data> = { ok: true; data: Data } | { ok: false };
 
 const PROFILE_COLUMNS = "summary, skills, updated_at";
 

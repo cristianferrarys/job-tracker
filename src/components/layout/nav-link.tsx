@@ -1,13 +1,10 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-/** Header navigation link that marks the current page with `aria-current`. */
-export function NavLink({ href, children }: { href: string; children: ReactNode }) {
-  const isCurrent = usePathname() === href;
+type NavLinkProps = { href: string; isCurrent: boolean; children: ReactNode };
 
+/** Header navigation link; the current page is marked with `aria-current`. */
+export function NavLink({ href, isCurrent, children }: NavLinkProps) {
   return (
     <Link
       href={href}
